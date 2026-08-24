@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ══════════════════════════════════════════════════
+     ARTFOLIO 內容編輯器
+     在這裡編輯完 → 按「匯出 data.json」→ 把下載的檔案
+     蓋掉專案裡的 data.json → 上傳,網站就更新了!
+     (這個頁面純粹在你的瀏覽器裡運作,不會上傳任何東西)
+     ══════════════════════════════════════════════════ -->
+<title>內容編輯器 — Artfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafafa; --bg-soft:#efefef; --fg:#111; --fg-soft:#666;
+  --line:#ddd; --card:#fff; --danger:#8a1f1f;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:'Noto Sans TC',system-ui,sans-serif;line-height:1.7;padding-bottom:120px}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:10px;height:58px;flex-wrap:wrap}
+.bar h1{font-family:'Noto Serif TC',serif;font-size:1.05rem;font-weight:900;margin-right:auto}
+button{font-family:inherit;cursor:pointer}
+.btn{padding:7px 18px;border-radius:999px;border:1px solid #111;background:#fff;font-size:.85rem;transition:all .15s}
+.btn:hover{background:#111;color:#fff}
+.btn.primary{background:#111;color:#fff}
+.btn.primary:hover{opacity:.8}
+.btn.small{padding:3px 12px;font-size:.78rem}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn.danger:hover{background:var(--danger);color:#fff}
+h2{font-family:'Noto Serif TC',serif;font-size:1.25rem;margin:44px 0 6px;scroll-margin-top:112px}
+.quicknav{display:flex;gap:4px;overflow-x:auto;padding:6px 0;border-top:1px solid var(--line);
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.quicknav::-webkit-scrollbar{display:none}
+.quicknav a{font-size:.8rem;color:var(--fg-soft);text-decoration:none;white-space:nowrap;
+  padding:3px 12px;border-radius:999px;transition:all .15s}
+.quicknav a:hover{background:var(--bg-soft);color:var(--fg)}
+.hint{font-size:.82rem;color:var(--fg-soft);margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:14px}
+label{display:block;font-size:.8rem;color:var(--fg-soft);margin:10px 0 3px}
+input[type=text],input[type=url],textarea,select{
+  width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:4px;
+  font-family:inherit;font-size:.9rem;background:#fff;color:var(--fg);
+}
+input:focus,textarea:focus{outline:none;border-color:#111}
+textarea{min-height:90px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+.item-head{display:flex;align-items:center;gap:8px}
+.item-head .title{font-weight:500;margin-right:auto;font-size:.95rem}
+.thumb{width:64px;height:64px;object-fit:cover;border:1px solid var(--line);border-radius:4px;filter:grayscale(1)}
+.badge{font-size:.72rem;border:1px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--fg-soft)}
+.cat-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.cat-row input{flex:1}
+.sublist{border-left:2px solid var(--line);padding-left:14px;margin-top:8px}
+.link-row{display:flex;gap:8px;margin-bottom:8px}
+.link-row input{flex:1}
+.toolbar-note{font-size:.78rem;color:var(--fg-soft)}
+#status{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;
+  padding:10px 26px;border-radius:999px;font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
+#status.show{opacity:1}
+.steps{background:var(--bg-soft);border-radius:6px;padding:14px 18px;font-size:.85rem;margin-top:10px}
+details.card summary{cursor:pointer;font-weight:500;font-size:.92rem}
+.checkline{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.88rem}
+.checkline input{width:auto}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar wrap">
+    <h1>✎ 內容編輯器</h1>
+    <button class="btn" id="importBtn">匯入 JSON</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+    <button class="btn" id="previewBtn">👁 預覽</button>
+    <button class="btn primary" id="exportBtn">⬇ 匯出 data.json</button>
+  </div>
+  <nav class="quicknav wrap">
+    <a href="#sec-site">網站設定</a><a href="#sec-ops">營運</a><a href="#sec-look">外觀</a>
+    <a href="#sec-profile">個人資料</a><a href="#sec-cats">分類</a><a href="#sec-works">作品</a><a href="#sec-tl">時間軸</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="steps" style="margin-top:18px">
+    <b>使用方式:</b>在下面編輯內容 → 按右上角「匯出 data.json」→ 用下載到的檔案<b>蓋掉專案裡的 data.json</b> → 上傳到 GitHub,網站就更新了。新圖片記得放進 <code>images/</code> 資料夾。這個編輯器完全在你的瀏覽器裡運作,資料不會傳到任何地方。
+  </div>
+
+  <h2 id="sec-site">網站設定</h2>
+  <div class="card">
+    <div class="row">
+      <div><label>網站標題(瀏覽器分頁上顯示)</label><input type="text" id="s_siteTitle"></div>
+      <div><label>頁尾文字(版權宣告等)</label><input type="text" id="s_footer"></div>
+    </div>
+    <div class="checkline"><input type="checkbox" id="s_guestbook"><label for="s_guestbook" style="margin:0">啟用留言板</label></div>
+    <div class="checkline"><input type="checkbox" id="s_protect"><label for="s_protect" style="margin:0">圖片保護:禁止右鍵另存與拖曳(只能防君子,擋不了截圖)</label></div>
+  </div>
+
+  <h2 id="sec-ops">營運小工具</h2>
+  <div class="card">
+    <b style="font-size:.92rem">📣 公告置頂欄</b>
+    <div class="checkline"><input type="checkbox" id="s_anEnabled"><label for="s_anEnabled" style="margin:0">顯示公告</label></div>
+    <div class="row">
+      <div><label>公告文字(例:新刊通販中!)</label><input type="text" id="s_anText" maxlength="60"></div>
+      <div><label>點擊連到(選填)</label><input type="text" id="s_anUrl" placeholder="https://…"></div>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:.92rem">💼 委託狀態徽章(顯示在名字下方)</b>
+    <div class="row" style="margin-top:6px">
+      <div><label>狀態</label>
+        <select id="s_cmStatus">
+          <option value="hidden">不顯示</option>
+          <option value="open">🟢 開放委託中</option>
+          <option value="full">🟡 排滿暫停接單</option>
+          <option value="paused">⚪ 委託暫停中</option>
+        </select></div>
+      <div><label>自訂文字(選填,不填用預設)</label><input type="text" id="s_cmText" maxlength="30" placeholder="委託開放中,還有 2 個名額"></div>
+    </div>
+    <label>點擊連到(選填,例:委託價目表)</label><input type="text" id="s_cmUrl" placeholder="https://…">
+  </div>
+
+  <h2 id="sec-look">外觀自訂</h2>
+  <p class="hint">全部都是選填——什麼都不動就是經典黑白。改完按上方「👁 預覽」馬上看效果(預覽不用先匯出)。</p>
+
+  <div class="card">
+    <b style="font-size:.92rem">🎨 主題預設包(一鍵套用,套完可再微調)</b>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" id="presetBtns"></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:.92rem">Logo 與網站圖示</b>
+    <div class="row">
+      <div>
+        <label>Logo 圖片路徑(顯示在左上角標題旁,選填)</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input type="text" id="a_logo" placeholder="images/logo.png">
+          <img class="thumb" id="a_logoPrev" style="width:40px;height:40px;display:none" alt="">
+        </div>
+        <div class="hint" style="margin-top:4px">建議:正方形或橫式、透明背景 PNG,高度 ≥ 96px 即可</div>
+      </div>
+      <div>
+        <label>Favicon(瀏覽器分頁小圖示,選填)</label>
+        <input type="text" id="a_favicon" placeholder="images/avatar.jpg">
+        <div class="hint" style="margin-top:4px">建議:正方形,192×192px 以上,可直接填頭像</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:.92rem">字體</b>
+    <div class="row">
+      <div><label>標題字體(名字、區塊標題)</label>
+        <select id="a_fontHeading">
+          <option value="noto-serif">明體(襯線・預設)</option>
+          <option value="noto-sans">黑體(俐落)</option>
+          <option value="wenkai">文楷(手寫感)</option>
+          <option value="zen-maru">圓體(可愛日系)</option>
+          <option value="zen-mincho">舊明朝(復古日系)</option>
+        </select></div>
+      <div><label>內文字體</label>
+        <select id="a_fontBody">
+          <option value="noto-sans">黑體(預設)</option>
+          <option value="noto-serif">明體(襯線)</option>
+          <option value="wenkai">文楷(手寫感)</option>
+          <option value="zen-maru">圓體(可愛日系)</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:.92rem">配色</b>
+    <div class="hint">整站顏色會從「背景+文字」兩色自動衍生,所以只要挑得順眼,整個網站就會協調。</div>
+    <div class="checkline"><input type="checkbox" id="a_useColors"><label for="a_useColors" style="margin:0">使用自訂配色(取代黑白)</label></div>
+    <div id="colorFields" style="display:none">
+      <div class="row" style="margin-top:8px">
+        <div><label>亮色主題:背景色 / 文字色</label>
+          <div style="display:flex;gap:10px"><input type="color" id="a_lightBg" style="width:60px;height:38px;padding:2px"><input type="color" id="a_lightFg" style="width:60px;height:38px;padding:2px"></div></div>
+        <div><label>暗色主題:背景色 / 文字色</label>
+          <div style="display:flex;gap:10px"><input type="color" id="a_darkBg" style="width:60px;height:38px;padding:2px"><input type="color" id="a_darkFg" style="width:60px;height:38px;padding:2px"></div></div>
+      </div>
+    </div>
+    <div class="checkline"><input type="checkbox" id="a_useAccent"><label for="a_useAccent" style="margin:0">使用強調色(按鈕、選中的分類、時間軸圓點)</label></div>
+    <div id="accentField" style="display:none;margin-top:6px"><input type="color" id="a_accent" style="width:60px;height:38px;padding:2px"></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:.92rem">版面</b>
+    <div class="row">
+      <div><label>圓角程度:<span id="a_radiusVal"></span>px(0 = 方正,20 = 圓潤)</label>
+        <input type="range" id="a_radius" min="0" max="20" step="1" style="width:100%"></div>
+      <div><label>作品每列欄數(電腦版)</label>
+        <select id="a_columns"><option value="3">3 欄(適合直式圖多)</option><option value="2">2 欄(圖大張、適合橫式)</option></select></div>
+    </div>
+    <div class="checkline"><input type="checkbox" id="a_grayscale"><label for="a_grayscale" style="margin:0">作品縮圖轉黑白(彩圖繪師請取消勾選!)</label></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:.92rem">背景圖(選填)</b>
+    <div class="row" style="margin-top:6px">
+      <div>
+        <label>圖片路徑</label>
+        <input type="text" id="a_bgImage" placeholder="images/bg.png">
+      </div>
+      <div>
+        <label>模式</label>
+        <select id="a_bgMode">
+          <option value="cover">滿版(一張大圖鋪滿)</option>
+          <option value="tile">平鋪(小圖樣重複)</option>
+        </select>
+      </div>
+    </div>
+    <label>淡化程度:<span id="a_bgOpacityVal"></span>%(數字越小越淡,建議 5–15%,才不會搶作品的戲)</label>
+    <input type="range" id="a_bgOpacity" min="2" max="40" step="1" style="width:100%">
+    <div class="steps" style="margin-top:10px">
+      📐 <b>建議尺寸:</b><br>
+      ・滿版:1920×1080px 以上,壓縮到 500KB 以內(手機上會裁切置中,重點別放邊緣)<br>
+      ・平鋪:200~512px 的正方形無縫圖樣(素材網搜「seamless pattern」),100KB 以內<br>
+      ・低對比、細節少的圖效果最好——背景是氣氛組,主角永遠是你的作品
+    </div>
+  </div>
+
+  <h2 id="sec-profile">個人資料</h2>
+  <div class="card">
+    <div class="row">
+      <div><label>名字/筆名</label><input type="text" id="p_name"></div>
+      <div><label>一句話介紹</label><input type="text" id="p_tagline"></div>
+    </div>
+    <label>頭像圖片路徑(例:images/avatar.jpg)</label>
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <input type="text" id="p_avatar" style="flex:1" placeholder="images/avatar.jpg">
+      <img class="thumb" id="p_avatarPrev" alt="" style="display:none">
+    </div>
+    <label>自我介紹(可換行)</label><textarea id="p_about"></textarea>
+    <label>社群/平台連結</label>
+    <div class="hint" style="margin-bottom:6px">作品散落各平台?把它們全都連回這裡吧。</div>
+    <div id="p_links"></div>
+    <button class="btn small" id="addLink">+ 新增連結</button>
+  </div>
+
+  <h2 id="sec-cats">作品分類</h2>
+  <p class="hint">觀眾可以用這些分類篩選作品。改名後記得檢查每件作品的分類是否要跟著改。</p>
+  <div class="card">
+    <div id="catList"></div>
+    <button class="btn small" id="addCat">+ 新增分類</button>
+  </div>
+
+  <h2 id="sec-works">作品 <span class="badge" id="workCount"></span></h2>
+  <p class="hint">新作品會排在最上面。「上移/下移」可調整顯示順序。</p>
+
+  <div class="card">
+    <b style="font-size:.92rem">🖼 圖片工具</b>
+    <div class="hint" style="margin-top:4px">「選圖」和「批次匯入」都會自動把圖壓縮成適合網頁的大小(最長邊 1600px、JPG 85%),原始檔不會被動到。</div>
+    <div class="checkline"><input type="checkbox" id="s_wmEnabled"><label for="s_wmEnabled" style="margin:0">壓縮時自動加浮水印(右下角)</label></div>
+    <div id="wmField" style="display:none"><label>浮水印文字</label><input type="text" id="s_wmText" maxlength="40" placeholder="© 你的名字"></div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn" id="addWork">+ 新增作品</button>
+    <button class="btn" id="batchBtn">📥 批次匯入圖片(自動建卡+壓縮)</button>
+    <input type="file" id="batchFile" accept="image/*" multiple hidden>
+    <input type="file" id="pickFile" accept="image/*" hidden>
+  </div>
+  <div id="workList"></div>
+
+  <h2 id="sec-tl">時間軸</h2>
+  <p class="hint">紀錄接稿、參展、出本、里程碑…。「成就」類型會在網站上加上 ★。顯示時自動照日期新→舊排序。</p>
+  <button class="btn" id="addTl" style="margin-bottom:14px">+ 新增紀錄</button>
+  <div id="tlList"></div>
+</div>
+
+<div id="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let DATA = null, dirty = false;
+
+const EMPTY = {
+  settings:{
+    siteTitle:"我的作品集", footer:"", guestbookEnabled:true, protectImages:false,
+    announcement:{ enabled:false, text:"", url:"" },
+    commission:{ status:"hidden", text:"", url:"" },
+    watermark:{ enabled:false, text:"" }
+  },
+  profile:{ name:"", tagline:"", avatar:"", about:"", links:[] },
+  appearance:{
+    logo:"", favicon:"",
+    fontHeading:"noto-serif", fontBody:"noto-sans",
+    useCustomColors:false,
+    light:{ bg:"#fafafa", fg:"#111111" },
+    dark:{ bg:"#0d0d0d", fg:"#f2f2f2" },
+    useAccent:false, accent:"#b3261e",
+    radius:4, columns:3, grayscale:true,
+    background:{ image:"", mode:"cover", opacity:0.08 }
+  },
+  categories:[], works:[], timeline:[]
+};
+
+/* ── 載入:優先抓同目錄的 data.json ── */
+fetch("data.json?v=" + Date.now())
+  .then(r => { if(!r.ok) throw 0; return r.json(); })
+  .then(d => { DATA = normalize(d); renderAll(); toast("已載入 data.json"); })
+  .catch(() => { DATA = structuredClone(EMPTY); renderAll(); toast("找不到 data.json,已開啟空白模板"); });
+
+function normalize(d){
+  const base = structuredClone(EMPTY);
+  const ap = d.appearance || {}, st = d.settings || {};
+  return {
+    settings:{
+      ...base.settings, ...st,
+      announcement:{...base.settings.announcement, ...(st.announcement||{})},
+      commission:{...base.settings.commission, ...(st.commission||{})},
+      watermark:{...base.settings.watermark, ...(st.watermark||{})}
+    },
+    profile:{...base.profile, ...(d.profile||{})},
+    appearance:{
+      ...base.appearance, ...ap,
+      light:{...base.appearance.light, ...(ap.light||{})},
+      dark:{...base.appearance.dark, ...(ap.dark||{})},
+      background:{...base.appearance.background, ...(ap.background||{})}
+    },
+    categories:d.categories||[], works:d.works||[], timeline:d.timeline||[]
+  };
+}
+
+function toast(msg){
+  const el = $("#status"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2600);
+}
+function markDirty(){ dirty = true; }
+addEventListener("beforeunload", e => { if (dirty) e.preventDefault(); });
+
+/* ── 渲染 ── */
+function renderAll(){
+  $("#s_siteTitle").value = DATA.settings.siteTitle || "";
+  $("#s_footer").value = DATA.settings.footer || "";
+  $("#s_guestbook").checked = DATA.settings.guestbookEnabled !== false;
+  $("#p_name").value = DATA.profile.name || "";
+  $("#p_tagline").value = DATA.profile.tagline || "";
+  $("#p_avatar").value = DATA.profile.avatar || "";
+  $("#p_about").value = DATA.profile.about || "";
+  $("#s_protect").checked = !!DATA.settings.protectImages;
+  $("#s_anEnabled").checked = !!DATA.settings.announcement.enabled;
+  $("#s_anText").value = DATA.settings.announcement.text || "";
+  $("#s_anUrl").value = DATA.settings.announcement.url || "";
+  $("#s_cmStatus").value = DATA.settings.commission.status || "hidden";
+  $("#s_cmText").value = DATA.settings.commission.text || "";
+  $("#s_cmUrl").value = DATA.settings.commission.url || "";
+  $("#s_wmEnabled").checked = !!DATA.settings.watermark.enabled;
+  $("#wmField").style.display = DATA.settings.watermark.enabled ? "block" : "none";
+  $("#s_wmText").value = DATA.settings.watermark.text || "";
+  avatarPrev();
+  renderAppearance();
+  renderLinks(); renderCats(); renderWorks(); renderTl();
+}
+
+/* ── 營運小工具/圖片工具繫結 ── */
+(function bindOps(){
+  const s = () => DATA.settings;
+  $("#s_protect").addEventListener("change", e => { s().protectImages = e.target.checked; markDirty(); });
+  $("#s_anEnabled").addEventListener("change", e => { s().announcement.enabled = e.target.checked; markDirty(); });
+  $("#s_anText").addEventListener("input", e => { s().announcement.text = e.target.value; markDirty(); });
+  $("#s_anUrl").addEventListener("input", e => { s().announcement.url = e.target.value; markDirty(); });
+  $("#s_cmStatus").addEventListener("change", e => { s().commission.status = e.target.value; markDirty(); });
+  $("#s_cmText").addEventListener("input", e => { s().commission.text = e.target.value; markDirty(); });
+  $("#s_cmUrl").addEventListener("input", e => { s().commission.url = e.target.value; markDirty(); });
+  $("#s_wmEnabled").addEventListener("change", e => { s().watermark.enabled = e.target.checked; $("#wmField").style.display = e.target.checked ? "block" : "none"; markDirty(); });
+  $("#s_wmText").addEventListener("input", e => { s().watermark.text = e.target.value; markDirty(); });
+})();
+
+/* ── 主題預設包 ── */
+const PRESETS = {
+  "經典黑白":{ fontHeading:"noto-serif", fontBody:"noto-sans", useCustomColors:false, useAccent:false, radius:4, columns:3 },
+  "奶茶拿鐵":{ fontHeading:"wenkai", fontBody:"noto-sans", useCustomColors:true,
+    light:{bg:"#f6f1e7",fg:"#4a3728"}, dark:{bg:"#1d1812",fg:"#e8dcc8"},
+    useAccent:true, accent:"#8a5a2b", radius:12, columns:3 },
+  "純暗夜":{ fontHeading:"noto-sans", fontBody:"noto-sans", useCustomColors:true,
+    light:{bg:"#17171c",fg:"#d9d9e3"}, dark:{bg:"#0a0a0e",fg:"#cfcfda"},
+    useAccent:true, accent:"#8b7cf8", radius:6, columns:3 },
+  "櫻花糖":{ fontHeading:"zen-maru", fontBody:"zen-maru", useCustomColors:true,
+    light:{bg:"#fdf3f5",fg:"#59353f"}, dark:{bg:"#241418",fg:"#f2d7dd"},
+    useAccent:true, accent:"#d4718c", radius:16, columns:3 },
+  "海鹽蘇打":{ fontHeading:"noto-sans", fontBody:"noto-sans", useCustomColors:true,
+    light:{bg:"#eef4f6",fg:"#28434e"}, dark:{bg:"#0e1a1f",fg:"#cfe3ea"},
+    useAccent:true, accent:"#3e8ca3", radius:10, columns:3 }
+};
+$("#presetBtns").innerHTML = Object.keys(PRESETS).map(k => `<button class="btn small" data-p="${k}">${k}</button>`).join("");
+document.querySelectorAll("#presetBtns .btn").forEach(b => b.onclick = () => {
+  const p = structuredClone(PRESETS[b.dataset.p]);
+  Object.assign(DATA.appearance, p);
+  renderAppearance(); markDirty();
+  toast(`已套用「${b.dataset.p}」,按預覽看效果!`);
+});
+
+/* ── 外觀自訂 ── */
+function renderAppearance(){
+  const a = DATA.appearance;
+  $("#a_logo").value = a.logo || ""; logoPrev();
+  $("#a_favicon").value = a.favicon || "";
+  $("#a_fontHeading").value = a.fontHeading || "noto-serif";
+  $("#a_fontBody").value = a.fontBody || "noto-sans";
+  $("#a_useColors").checked = !!a.useCustomColors;
+  $("#colorFields").style.display = a.useCustomColors ? "block" : "none";
+  $("#a_lightBg").value = a.light.bg; $("#a_lightFg").value = a.light.fg;
+  $("#a_darkBg").value = a.dark.bg; $("#a_darkFg").value = a.dark.fg;
+  $("#a_useAccent").checked = !!a.useAccent;
+  $("#accentField").style.display = a.useAccent ? "block" : "none";
+  $("#a_accent").value = a.accent || "#b3261e";
+  $("#a_radius").value = a.radius ?? 4; $("#a_radiusVal").textContent = a.radius ?? 4;
+  $("#a_columns").value = String(a.columns || 3);
+  $("#a_grayscale").checked = a.grayscale !== false;
+  $("#a_bgImage").value = a.background.image || "";
+  $("#a_bgMode").value = a.background.mode || "cover";
+  const op = Math.round((a.background.opacity ?? 0.08) * 100);
+  $("#a_bgOpacity").value = op; $("#a_bgOpacityVal").textContent = op;
+}
+function logoPrev(){
+  const img = $("#a_logoPrev"), v = DATA?.appearance.logo;
+  if (v){ img.src = v; img.style.display = "block"; img.onerror = () => img.style.display = "none"; }
+  else img.style.display = "none";
+}
+function bindAppearance(){
+  const a = () => DATA.appearance;
+  $("#a_logo").addEventListener("input", e => { a().logo = e.target.value; logoPrev(); markDirty(); });
+  $("#a_favicon").addEventListener("input", e => { a().favicon = e.target.value; markDirty(); });
+  $("#a_fontHeading").addEventListener("change", e => { a().fontHeading = e.target.value; markDirty(); });
+  $("#a_fontBody").addEventListener("change", e => { a().fontBody = e.target.value; markDirty(); });
+  $("#a_useColors").addEventListener("change", e => { a().useCustomColors = e.target.checked; $("#colorFields").style.display = e.target.checked ? "block" : "none"; markDirty(); });
+  $("#a_lightBg").addEventListener("input", e => { a().light.bg = e.target.value; markDirty(); });
+  $("#a_lightFg").addEventListener("input", e => { a().light.fg = e.target.value; markDirty(); });
+  $("#a_darkBg").addEventListener("input", e => { a().dark.bg = e.target.value; markDirty(); });
+  $("#a_darkFg").addEventListener("input", e => { a().dark.fg = e.target.value; markDirty(); });
+  $("#a_useAccent").addEventListener("change", e => { a().useAccent = e.target.checked; $("#accentField").style.display = e.target.checked ? "block" : "none"; markDirty(); });
+  $("#a_accent").addEventListener("input", e => { a().accent = e.target.value; markDirty(); });
+  $("#a_radius").addEventListener("input", e => { a().radius = +e.target.value; $("#a_radiusVal").textContent = e.target.value; markDirty(); });
+  $("#a_columns").addEventListener("change", e => { a().columns = +e.target.value; markDirty(); });
+  $("#a_grayscale").addEventListener("change", e => { a().grayscale = e.target.checked; markDirty(); });
+  $("#a_bgImage").addEventListener("input", e => { a().background.image = e.target.value; markDirty(); });
+  $("#a_bgMode").addEventListener("change", e => { a().background.mode = e.target.value; markDirty(); });
+  $("#a_bgOpacity").addEventListener("input", e => { a().background.opacity = +e.target.value / 100; $("#a_bgOpacityVal").textContent = e.target.value; markDirty(); });
+}
+bindAppearance();
+
+/* 基本欄位雙向繫結 */
+[["s_siteTitle",v=>DATA.settings.siteTitle=v],["s_footer",v=>DATA.settings.footer=v],
+ ["p_name",v=>DATA.profile.name=v],["p_tagline",v=>DATA.profile.tagline=v],
+ ["p_avatar",v=>{DATA.profile.avatar=v;avatarPrev();}],["p_about",v=>DATA.profile.about=v]
+].forEach(([id,fn]) => document.addEventListener("input", e => { if(e.target.id===id){ fn(e.target.value); markDirty(); }}));
+$("#s_guestbook").addEventListener("change", e => { DATA.settings.guestbookEnabled = e.target.checked; markDirty(); });
+
+function avatarPrev(){
+  const img = $("#p_avatarPrev"), v = DATA?.profile.avatar;
+  if (v){ img.src = v; img.style.display = "block"; img.onerror = () => img.style.display = "none"; }
+  else img.style.display = "none";
+}
+
+/* ── 個人連結 ── */
+function renderLinks(){
+  $("#p_links").innerHTML = DATA.profile.links.map((l,i) => `
+    <div class="link-row">
+      <input type="text" placeholder="名稱(如 Pixiv)" value="${esc(l.label)}" oninput="DATA.profile.links[${i}].label=this.value;markDirty()">
+      <input type="text" placeholder="https://…" value="${esc(l.url)}" oninput="DATA.profile.links[${i}].url=this.value;markDirty()">
+      <button class="btn small danger" onclick="DATA.profile.links.splice(${i},1);renderLinks();markDirty()">✕</button>
+    </div>`).join("");
+}
+$("#addLink").onclick = () => { DATA.profile.links.push({label:"",url:""}); renderLinks(); markDirty(); };
+
+/* ── 分類 ── */
+function renderCats(){
+  $("#catList").innerHTML = DATA.categories.map((c,i) => `
+    <div class="cat-row">
+      <input type="text" value="${esc(c)}" oninput="DATA.categories[${i}]=this.value;markDirty()">
+      <button class="btn small" ${i===0?"disabled":""} onclick="swap(DATA.categories,${i},${i-1});renderCats();markDirty()">↑</button>
+      <button class="btn small" ${i===DATA.categories.length-1?"disabled":""} onclick="swap(DATA.categories,${i},${i+1});renderCats();markDirty()">↓</button>
+      <button class="btn small danger" onclick="DATA.categories.splice(${i},1);renderCats();renderWorks();markDirty()">✕</button>
+    </div>`).join("");
+}
+$("#addCat").onclick = () => { DATA.categories.push("新分類"); renderCats(); markDirty(); };
+function swap(arr,a,b){ [arr[a],arr[b]] = [arr[b],arr[a]]; }
+
+/* ── 作品 ── */
+function catOptions(sel){
+  return DATA.categories.map(c => `<option ${c===sel?"selected":""}>${esc(c)}</option>`).join("")
+    + (sel && !DATA.categories.includes(sel) ? `<option selected>${esc(sel)}</option>` : "");
+}
+function renderWorks(){
+  $("#workCount").textContent = DATA.works.length + " 件";
+  $("#workList").innerHTML = DATA.works.map((w,i) => `
+    <details class="card" ${w._open?"open":""} ontoggle="DATA.works[${i}]._open=this.open">
+      <summary>
+        <span class="item-head" style="display:inline-flex;width:calc(100% - 24px)">
+          <span class="title">${esc(w.title)||"(未命名)"}</span>
+          <span class="badge">${esc(w.category)||"未分類"}</span>
+          <button class="btn small" ${i===0?"disabled":""} onclick="event.preventDefault();swap(DATA.works,${i},${i-1});renderWorks();markDirty()">↑</button>
+          <button class="btn small" ${i===DATA.works.length-1?"disabled":""} onclick="event.preventDefault();swap(DATA.works,${i},${i+1});renderWorks();markDirty()">↓</button>
+          <button class="btn small danger" onclick="event.preventDefault();delWork(${i})">刪除</button>
+        </span>
+      </summary>
+      <div class="row">
+        <div><label>標題</label><input type="text" value="${esc(w.title)}" oninput="DATA.works[${i}].title=this.value;markDirty()"></div>
+        <div><label>分類</label><select onchange="DATA.works[${i}].category=this.value;renderWorks();markDirty()">${catOptions(w.category)}</select></div>
+      </div>
+      <div class="row">
+        <div><label>日期(例:2026-05)</label><input type="text" value="${esc(w.date)}" oninput="DATA.works[${i}].date=this.value;markDirty()"></div>
+        <div><label>標籤(用逗號分隔)</label><input type="text" value="${esc((w.tags||[]).join(", "))}" oninput="DATA.works[${i}].tags=this.value.split(/[,,]/).map(s=>s.trim()).filter(Boolean);markDirty()"></div>
+      </div>
+      <div class="checkline"><input type="checkbox" id="nsfw${i}" ${w.nsfw?"checked":""} onchange="DATA.works[${i}].nsfw=this.checked;markDirty()"><label for="nsfw${i}" style="margin:0">🔞 R-18/敏感內容(縮圖會霧化,點擊才顯示)</label></div>
+      <label>圖片路徑(記得把圖放進 images/ 資料夾)</label>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <button class="btn small" onclick="pickImage(${i})">選圖<br>自動壓縮</button>
+        <input type="text" style="flex:1" placeholder="images/xxx.jpg" value="${esc(w.image)}" oninput="DATA.works[${i}].image=this.value;renderWorkThumb(${i},this)">
+        <img class="thumb" src="${esc(w.image)}" onerror="this.style.visibility='hidden'" alt="">
+      </div>
+      <label>作品說明(可換行)</label>
+      <textarea oninput="DATA.works[${i}].desc=this.value;markDirty()">${esc(w.desc)}</textarea>
+      <label>外部連結(這件作品在其他平台的網址)</label>
+      <div class="sublist">
+        ${(w.links||[]).map((l,j) => `
+          <div class="link-row">
+            <input type="text" placeholder="名稱" value="${esc(l.label)}" oninput="DATA.works[${i}].links[${j}].label=this.value;markDirty()">
+            <input type="text" placeholder="https://…" value="${esc(l.url)}" oninput="DATA.works[${i}].links[${j}].url=this.value;markDirty()">
+            <button class="btn small danger" onclick="DATA.works[${i}].links.splice(${j},1);renderWorks();markDirty()">✕</button>
+          </div>`).join("")}
+        <button class="btn small" onclick="(DATA.works[${i}].links=DATA.works[${i}].links||[]).push({label:'',url:''});renderWorks();markDirty()">+ 連結</button>
+      </div>
+    </details>`).join("");
+}
+function renderWorkThumb(i, input){
+  markDirty();
+  const img = input.parentElement.querySelector("img");
+  img.style.visibility = "visible"; img.src = input.value;
+}
+function delWork(i){
+  if (confirm(`確定刪除「${DATA.works[i].title||"未命名"}」?`)){ DATA.works.splice(i,1); renderWorks(); markDirty(); }
+}
+$("#addWork").onclick = () => {
+  DATA.works.unshift({ id:"w"+Date.now(), title:"", category:DATA.categories[0]||"", tags:[], image:"images/", date:"", desc:"", links:[], nsfw:false, _open:true });
+  renderWorks(); markDirty();
+};
+
+/* ── 圖片壓縮(瀏覽器內完成,最長邊 1600px、JPG 85%,可加浮水印) ── */
+function compressImage(file, maxSide = 1600){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      const ctx = cv.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      const wm = DATA.settings.watermark;
+      if (wm.enabled && wm.text){
+        const fs = Math.max(14, Math.round(w / 42));
+        ctx.font = `${fs}px sans-serif`;
+        ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+        ctx.fillStyle = "rgba(0,0,0,.45)";
+        ctx.fillText(wm.text, w - fs * 0.8 + 1, h - fs * 0.6 + 1);
+        ctx.fillStyle = "rgba(255,255,255,.75)";
+        ctx.fillText(wm.text, w - fs * 0.8, h - fs * 0.6);
+      }
+      cv.toBlob(blob => {
+        const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+        resolve({ blob, name, kb: Math.round(blob.size / 1024) });
+      }, "image/jpeg", 0.85);
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+function downloadBlob(blob, name){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* 單張選圖:壓縮→下載壓縮檔→自動填路徑 */
+let pickTarget = null;
+function pickImage(i){ pickTarget = i; $("#pickFile").click(); }
+$("#pickFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f || pickTarget === null) return;
+  try{
+    const { blob, name, kb } = await compressImage(f);
+    downloadBlob(blob, name);
+    DATA.works[pickTarget].image = "images/" + name;
+    renderWorks(); markDirty();
+    toast(`已下載壓縮圖 ${name}(${kb}KB)——把它放進專案的 images/ 資料夾`);
+  }catch{ alert("這個檔案無法讀取,請確認是圖片檔。"); }
+};
+
+/* ── 迷你 zip 打包器(免外部函式庫,STORE 模式,JPG 本身已壓縮) ── */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(u8){
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function makeZip(entries){ // entries: [{name, data:Uint8Array}]
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  for (const { name, data } of entries){
+    const nameB = enc.encode(name), crc = crc32(data);
+    const head = new DataView(new ArrayBuffer(30));
+    head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true);
+    head.setUint16(6, 0x0800, true); /* UTF-8 檔名 */ head.setUint16(8, 0, true);
+    head.setUint32(14, crc, true); head.setUint32(18, data.length, true);
+    head.setUint32(22, data.length, true); head.setUint16(26, nameB.length, true);
+    parts.push(head.buffer, nameB, data);
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0x0800, true); cd.setUint16(10, 0, true);
+    cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true);
+    cd.setUint32(24, data.length, true); cd.setUint16(28, nameB.length, true);
+    cd.setUint32(42, offset, true);
+    central.push(cd.buffer, nameB);
+    offset += 30 + nameB.length + data.length;
+  }
+  const cdSize = central.reduce((s, b) => s + (b.byteLength ?? b.length), 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end.buffer], { type: "application/zip" });
+}
+
+/* 批次匯入:多張圖→各自壓縮→打包 zip 下載→自動建立作品卡 */
+$("#batchBtn").onclick = () => $("#batchFile").click();
+$("#batchFile").onchange = async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if (!files.length) return;
+  toast(`處理中…共 ${files.length} 張`);
+  const entries = [];
+  let done = 0;
+  for (const f of files){
+    try{
+      const { blob, name } = await compressImage(f);
+      entries.push({ name, data: new Uint8Array(await blob.arrayBuffer()) });
+      DATA.works.unshift({
+        id: "w" + Date.now() + "_" + done,
+        title: f.name.replace(/\.[^.]+$/, ""),
+        category: DATA.categories[0] || "", tags: [],
+        image: "images/" + name, date: "", desc: "", links: [], nsfw: false
+      });
+      done++;
+    }catch{}
+  }
+  renderWorks(); markDirty();
+  if (entries.length) downloadBlob(makeZip(entries), "images-compressed.zip");
+  toast(`完成 ${done} 張!解壓 zip 把圖放進 images/,再補上標題分類即可`);
+};
+
+/* ── 時間軸 ── */
+const TL_TYPES = { milestone:"里程碑", achievement:"成就 ★", event:"活動" };
+function renderTl(){
+  $("#tlList").innerHTML = DATA.timeline.map((t,i) => `
+    <div class="card">
+      <div class="item-head">
+        <span class="title">${esc(t.date)} — ${esc(t.title)||"(未命名)"}</span>
+        <button class="btn small danger" onclick="if(confirm('確定刪除?')){DATA.timeline.splice(${i},1);renderTl();markDirty()}">刪除</button>
+      </div>
+      <div class="row">
+        <div><label>日期(例:2026-06,會自動排序)</label><input type="text" value="${esc(t.date)}" oninput="DATA.timeline[${i}].date=this.value;markDirty()"></div>
+        <div><label>類型</label><select onchange="DATA.timeline[${i}].type=this.value;markDirty()">
+          ${Object.entries(TL_TYPES).map(([k,v]) => `<option value="${k}" ${t.type===k?"selected":""}>${v}</option>`).join("")}
+        </select></div>
+      </div>
+      <label>標題</label><input type="text" value="${esc(t.title)}" oninput="DATA.timeline[${i}].title=this.value;markDirty()">
+      <label>說明(選填)</label><textarea style="min-height:56px" oninput="DATA.timeline[${i}].desc=this.value;markDirty()">${esc(t.desc)}</textarea>
+    </div>`).join("");
+}
+$("#addTl").onclick = () => { DATA.timeline.unshift({date:"",title:"",desc:"",type:"event"}); renderTl(); markDirty(); };
+
+/* ── 匯入/匯出 ── */
+$("#importBtn").onclick = () => $("#importFile").click();
+$("#importFile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{ DATA = normalize(JSON.parse(rd.result)); renderAll(); markDirty(); toast("匯入成功!記得匯出存檔"); }
+    catch{ alert("這個檔案不是有效的 JSON,匯入失敗。"); }
+  };
+  rd.readAsText(f); e.target.value = "";
+};
+function cleanData(){
+  const clean = structuredClone(DATA);
+  clean.works.forEach(w => delete w._open);
+  return clean;
+}
+$("#previewBtn").onclick = () => {
+  try{
+    localStorage.setItem("artfolio_preview", JSON.stringify(cleanData()));
+    window.open("index.html?preview=1", "_blank");
+  }catch{ alert("無法開啟預覽(瀏覽器封鎖了本機儲存)。"); }
+};
+$("#exportBtn").onclick = () => {
+  const clean = cleanData();
+  const blob = new Blob([JSON.stringify(clean, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "data.json"; a.click();
+  URL.revokeObjectURL(a.href);
+  dirty = false; toast("已匯出!用它蓋掉專案裡的 data.json 再上傳");
+};
+</script>
+</body>
+</html>

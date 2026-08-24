@@ -1,0 +1,60 @@
+# ══════════════════════════════════════════════
+# 阻擋主要 AI 訓練爬蟲(名單可自行增刪)
+# 注意:這是「君子協定」,守規矩的爬蟲會遵守。
+# 更強硬的阻擋請到 Cloudflare 後台開啟一鍵封鎖:
+# 你的網域 → Security → Bots → Block AI Bots
+# (README 教學有圖文步驟)
+# ══════════════════════════════════════════════
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: img2dataset
+Disallow: /
+
+# 一般搜尋引擎(Google/Bing 搜尋收錄)仍然允許,
+# 想連搜尋引擎都擋掉的話,把下面兩行改成 Disallow: /
+User-agent: *
+Allow: /

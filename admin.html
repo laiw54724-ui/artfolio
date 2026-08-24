@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ══════════════════════════════════════════════════
+     留言板管理頁(站長專用)
+     部署後打開 你的網址/admin.html,輸入 ADMIN_TOKEN
+     (在 Cloudflare Pages 環境變數裡設定的那串密碼)
+     就能一鍵隱藏/恢復留言,不用下 SQL。
+     這頁沒有 token 什麼都做不了,所以放著也安全。
+     ══════════════════════════════════════════════════ -->
+<title>留言板管理</title>
+<style>
+:root{--bg:#fafafa;--fg:#111;--fg-soft:#666;--line:#ddd;--card:#fff;--danger:#8a1f1f}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:'Noto Sans TC',system-ui,sans-serif;line-height:1.7;padding:30px 16px 80px}
+.wrap{max-width:680px;margin:0 auto}
+h1{font-size:1.3rem;margin-bottom:4px}
+.hint{font-size:.84rem;color:var(--fg-soft);margin-bottom:20px}
+.login{display:flex;gap:10px;margin-bottom:26px}
+input[type=password]{flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:4px;font-size:.9rem;font-family:inherit}
+button{font-family:inherit;cursor:pointer}
+.btn{padding:8px 20px;border-radius:999px;border:1px solid #111;background:#111;color:#fff;font-size:.86rem}
+.btn:hover{opacity:.8}
+.btn.ghost{background:#fff;color:#111}
+.btn.small{padding:3px 14px;font-size:.78rem}
+.item{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:12px}
+.item.hiddenC{opacity:.5;border-style:dashed}
+.who{font-weight:500;font-size:.92rem}
+.when{font-size:.75rem;color:var(--fg-soft);margin-left:8px}
+.tag{font-size:.72rem;border:1px solid var(--danger);color:var(--danger);border-radius:999px;padding:0 8px;margin-left:8px}
+.msg{font-size:.92rem;margin:6px 0 10px;white-space:pre-line;word-break:break-word}
+#status{font-size:.85rem;color:var(--fg-soft);margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛡 留言板管理</h1>
+  <p class="hint">輸入你在 Cloudflare 設定的 ADMIN_TOKEN。「隱藏」的留言不會出現在網站上,但資料還在,隨時可以恢復。</p>
+  <div class="login">
+    <input type="password" id="token" placeholder="ADMIN_TOKEN">
+    <button class="btn" id="loadBtn">載入留言</button>
+  </div>
+  <p id="status"></p>
+  <div id="list"></div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const API = "/api/guestbook";
+let TOKEN = sessionStorage.getItem("admin_token") || "";
+if (TOKEN){ $("#token").value = TOKEN; }
+
+async function load(){
+  TOKEN = $("#token").value.trim();
+  if (!TOKEN){ $("#status").textContent = "請先輸入 ADMIN_TOKEN"; return; }
+  $("#status").textContent = "載入中…";
+  try{
+    const r = await fetch(API + "?all=1", { headers: { Authorization: "Bearer " + TOKEN } });
+    if (r.status === 401) throw new Error("TOKEN 不對,或還沒在 Cloudflare 設定 ADMIN_TOKEN");
+    if (!r.ok) throw new Error("載入失敗(留言板 API 尚未部署?)");
+    const list = await r.json();
+    sessionStorage.setItem("admin_token", TOKEN);
+    $("#status").textContent = `共 ${list.length} 則留言(含已隱藏)`;
+    $("#list").innerHTML = list.map(c => `
+      <div class="item ${c.hidden ? "hiddenC" : ""}">
+        <span class="who">${esc(c.name)}</span><span class="when">#${c.id} · ${esc((c.created_at||"").slice(0,16).replace("T"," "))}</span>
+        ${c.hidden ? '<span class="tag">已隱藏</span>' : ""}
+        <div class="msg">${esc(c.message)}</div>
+        ${c.hidden
+          ? `<button class="btn small ghost" onclick="act(${c.id}, true)">恢復顯示</button>`
+          : `<button class="btn small ghost" onclick="act(${c.id}, false)">隱藏這則</button>`}
+      </div>`).join("") || "<p class='hint'>還沒有任何留言。</p>";
+  }catch(e){ $("#status").textContent = "😢 " + e.message; $("#list").innerHTML = ""; }
+}
+async function act(id, restore){
+  const r = await fetch(`${API}?id=${id}${restore ? "&restore=1" : ""}`, {
+    method: "DELETE", headers: { Authorization: "Bearer " + TOKEN }
+  });
+  if (r.ok) load(); else $("#status").textContent = "操作失敗";
+}
+$("#loadBtn").onclick = load;
+$("#token").addEventListener("keydown", e => { if (e.key === "Enter") load(); });
+if (TOKEN) load();
+</script>
+</body>
+</html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ══════════════════════════════════════════════════
+     ARTFOLIO — 繪師作品集模板
+     你不需要修改這個檔案!所有內容與外觀設定都在
+     data.json 裡,用 editor.html 視覺化編輯後匯出蓋掉即可。
+     ══════════════════════════════════════════════════ -->
+<title>作品集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="alternate" type="application/rss+xml" title="作品更新" href="rss.xml">
+<style>
+/* ── 調色盤:整站顏色全部由 --bg 與 --fg 兩色自動衍生 ──
+     所以自訂配色只需要挑兩個顏色,整個網站都會跟著協調 */
+:root{
+  --bg:#fafafa; --fg:#111111;
+  --radius:4px;
+  --font-body:'Noto Sans TC',system-ui,sans-serif;
+  --font-display:'Noto Serif TC',serif;
+  --shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --bg:#0d0d0d; --fg:#f2f2f2; --shadow:rgba(0,0,0,.5);
+}
+:root{
+  --fg-soft:color-mix(in srgb, var(--fg) 58%, var(--bg));
+  --line:color-mix(in srgb, var(--fg) 14%, var(--bg));
+  --card:color-mix(in srgb, var(--fg) 3%, var(--bg));
+  --accent:var(--fg);
+  --accent-contrast:var(--bg);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:var(--font-body);
+  font-weight:400; line-height:1.8; letter-spacing:.02em;
+  transition:background .35s,color .35s;
+}
+#bgLayer{position:fixed;inset:0;z-index:-1;pointer-events:none;background-position:center}
+img{display:block;max-width:100%}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ── 頂欄 ─────────────────────────────────────── */
+header{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.nav{display:flex;align-items:center;gap:18px;height:60px}
+.nav .brand{font-family:var(--font-display);font-weight:900;font-size:1.05rem;text-decoration:none;margin-right:auto;white-space:nowrap;display:flex;align-items:center;gap:10px;min-width:0}
+.nav .brand span{overflow:hidden;text-overflow:ellipsis}
+.nav .brand img{height:30px;width:auto;border-radius:var(--radius)}
+.nav a.item{font-size:.88rem;text-decoration:none;color:var(--fg-soft);transition:color .2s;white-space:nowrap}
+.nav a.item:hover{color:var(--fg)}
+#themeBtn{
+  border:1px solid var(--line);background:transparent;color:var(--fg);
+  width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:.95rem;flex:none;
+  display:grid;place-items:center;transition:transform .3s,background .2s;
+}
+#themeBtn:hover{transform:rotate(20deg);background:var(--card)}
+
+/* ── Hero / About ─────────────────────────────── */
+.hero{padding:76px 0 60px;display:flex;gap:44px;align-items:flex-start;flex-wrap:wrap}
+.hero .avatar{
+  width:150px;height:150px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--line);
+  box-shadow:0 8px 30px var(--shadow);
+}
+.hero .info{flex:1;min-width:260px}
+.hero h1{font-family:var(--font-display);font-weight:900;font-size:clamp(1.9rem,4.5vw,2.8rem);line-height:1.25}
+.hero .tagline{color:var(--fg-soft);margin-top:8px;font-size:1.02rem}
+.hero .about{margin-top:22px;max-width:620px;white-space:pre-line;font-size:.95rem}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.links a{
+  text-decoration:none;font-size:.86rem;padding:7px 18px;
+  border:1px solid var(--fg);border-radius:999px;transition:all .2s;
+}
+.links a:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+
+/* ── 區塊標題 ─────────────────────────────────── */
+section{padding:56px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:30px}
+.sec-head h2{font-family:var(--font-display);font-weight:700;font-size:1.55rem;white-space:nowrap}
+.sec-head .en{font-size:.78rem;letter-spacing:.28em;color:var(--fg-soft);text-transform:uppercase}
+.sec-head::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ── 作品集 ───────────────────────────────────── */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+.chip{
+  border:1px solid var(--line);background:transparent;color:var(--fg-soft);
+  padding:6px 16px;border-radius:999px;font-size:.85rem;cursor:pointer;
+  font-family:inherit;transition:all .2s;
+}
+.chip:hover{border-color:var(--fg);color:var(--fg)}
+.chip.on{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent)}
+.gallery{columns:3;column-gap:18px}
+html[data-cols="2"] .gallery{columns:2}
+@media(max-width:860px){.gallery{columns:2 !important}}
+@media(max-width:520px){.gallery{columns:1 !important}}
+.work{
+  break-inside:avoid;margin-bottom:18px;cursor:pointer;position:relative;
+  border:1px solid var(--line);background:var(--card);border-radius:var(--radius);overflow:hidden;
+  transition:transform .25s,box-shadow .25s;
+}
+.work:hover{transform:translateY(-4px);box-shadow:0 14px 34px var(--shadow)}
+html[data-gray="on"] .work img, html[data-gray="on"] .avatar, html[data-gray="on"] .lb-inner img{filter:grayscale(1)}
+.work img{width:100%;transition:filter .3s}
+.work .meta{padding:12px 14px;border-top:1px solid var(--line);
+  position:relative;z-index:3;background:var(--card)} /* 蓋在放大的模糊圖之上,確保標題清晰 */
+.work .meta .t{font-weight:500;font-size:.95rem}
+.work .meta .c{font-size:.76rem;color:var(--fg-soft);margin-top:2px;letter-spacing:.06em}
+.empty{color:var(--fg-soft);font-size:.9rem;padding:30px 0;text-align:center}
+
+/* ── 燈箱 ─────────────────────────────────────── */
+.lightbox{
+  position:fixed;inset:0;z-index:100;display:none;
+  background:color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter:blur(10px);overflow-y:auto;
+}
+.lightbox.open{display:block}
+.lb-inner{max-width:880px;margin:0 auto;padding:70px 24px 60px;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.lb-inner img{display:block;max-width:100%;width:auto;max-height:74vh;margin:0 auto;
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 20px 60px var(--shadow)}
+.lb-title{font-family:var(--font-display);font-weight:700;font-size:1.5rem;margin-top:26px}
+.lb-sub{color:var(--fg-soft);font-size:.85rem;margin-top:4px;letter-spacing:.05em}
+.lb-desc{margin-top:14px;white-space:pre-line;font-size:.95rem;max-width:640px}
+.lb-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.lb-links a{font-size:.83rem;padding:6px 16px;border:1px solid var(--fg);border-radius:999px;text-decoration:none}
+.lb-links a:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+.lb-close{
+  position:fixed;top:18px;right:22px;z-index:101;
+  width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+  background:var(--card);color:var(--fg);font-size:1.1rem;cursor:pointer;
+}
+.lb-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:101;
+  width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+  background:var(--card);color:var(--fg);font-size:1rem;cursor:pointer}
+.lb-prev{left:14px}.lb-next{right:14px}
+@media(max-width:640px){.lb-nav{top:auto;bottom:16px;transform:none}}
+
+/* ── 時間軸 ───────────────────────────────────── */
+.timeline{position:relative;margin-left:10px;padding-left:34px}
+.timeline::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl-item{position:relative;padding-bottom:34px}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{
+  content:"";position:absolute;left:-39px;top:8px;width:9px;height:9px;
+  border-radius:50%;background:var(--bg);border:2px solid var(--accent);
+}
+.tl-item.achievement::before{background:var(--accent)}
+.tl-date{font-size:.8rem;color:var(--fg-soft);letter-spacing:.12em}
+.tl-title{font-weight:500;font-size:1.05rem;margin-top:2px}
+.tl-title .star{font-size:.85em}
+.tl-desc{color:var(--fg-soft);font-size:.9rem;margin-top:3px;max-width:600px;white-space:pre-line}
+
+/* ── 留言板 ───────────────────────────────────── */
+.gb-form{max-width:560px;display:grid;gap:12px;margin-bottom:36px}
+.gb-form input,.gb-form textarea{
+  background:var(--card);border:1px solid var(--line);color:var(--fg);
+  padding:11px 14px;border-radius:var(--radius);font-family:inherit;font-size:.92rem;width:100%;
+  transition:border-color .2s;
+}
+.gb-form input:focus,.gb-form textarea:focus{outline:none;border-color:var(--fg)}
+.gb-form textarea{min-height:104px;resize:vertical}
+.gb-form button{
+  justify-self:start;padding:9px 30px;border-radius:999px;cursor:pointer;
+  background:var(--accent);color:var(--accent-contrast);border:1px solid var(--accent);
+  font-family:inherit;font-size:.9rem;transition:opacity .2s;
+}
+.gb-form button:hover{opacity:.82}
+.gb-form button:disabled{opacity:.4;cursor:default}
+.hp{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden}
+.gb-note{font-size:.85rem;color:var(--fg-soft)}
+.gb-list{display:grid;gap:14px;max-width:640px}
+.gb-item{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:14px 18px}
+.gb-item .who{font-weight:500;font-size:.92rem}
+.gb-item .when{font-size:.75rem;color:var(--fg-soft);margin-left:8px}
+.gb-item .msg{font-size:.92rem;margin-top:6px;white-space:pre-line;word-break:break-word}
+
+/* ── 頁尾 ─────────────────────────────────────── */
+footer{border-top:1px solid var(--line);padding:36px 0 48px;margin-top:40px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:.8rem;color:var(--fg-soft)}
+#topBtn{background:none;border:none;color:var(--fg-soft);cursor:pointer;font-family:inherit;font-size:.8rem;text-decoration:underline}
+
+/* ── 公告欄 ── */
+#announce{display:none;background:var(--accent);color:var(--accent-contrast);
+  text-align:center;font-size:.85rem;padding:8px 40px;position:relative}
+#announce a{color:inherit;font-weight:500}
+#announceClose{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:inherit;cursor:pointer;font-size:1rem;opacity:.7}
+#announceClose:hover{opacity:1}
+
+/* ── 委託狀態徽章 ── */
+.comm-badge{display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+  border:1px solid var(--line);border-radius:999px;padding:5px 16px;font-size:.83rem;text-decoration:none}
+a.comm-badge:hover{border-color:var(--fg)}
+.comm-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.comm-open .comm-dot{background:#38a35f;box-shadow:0 0 6px #38a35f}
+.comm-full .comm-dot{background:#c9a227}
+.comm-paused .comm-dot{background:var(--fg-soft)}
+
+/* ── 作品搜尋 ── */
+.works-tools{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:28px}
+.works-tools .filters{margin-bottom:0;flex:1}
+#searchBox{background:var(--card);border:1px solid var(--line);color:var(--fg);
+  padding:7px 14px;border-radius:999px;font-family:inherit;font-size:.85rem;width:180px;transition:border-color .2s}
+#searchBox:focus{outline:none;border-color:var(--fg);width:220px}
+@media(max-width:560px){#searchBox,#searchBox:focus{width:100%}}
+
+/* ── R-18 遮罩 ── */
+.work.nsfw img{filter:blur(26px) grayscale(0) !important;transform:scale(1.12)}
+.work.nsfw{overflow:hidden}
+.work .mask{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;
+  align-items:center;justify-content:center;z-index:2;
+  background:color-mix(in srgb, var(--bg) 45%, transparent);text-align:center}
+.work .mask .r18{font-family:var(--font-display);font-weight:900;font-size:1.3rem;
+  border:2px solid var(--fg);border-radius:var(--radius);padding:2px 14px;
+  background:color-mix(in srgb, var(--bg) 85%, transparent)}
+.work .mask .hint{font-size:.78rem;color:var(--fg);
+  background:color-mix(in srgb, var(--bg) 75%, transparent);
+  padding:2px 10px;border-radius:999px}
+
+/* ── 圖片保護(防拖曳) ── */
+html[data-protect="on"] img{-webkit-user-drag:none;user-drag:none;-webkit-user-select:none;user-select:none}
+
+/* ── 預覽模式提示 ── */
+#previewBar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:200;
+  background:var(--fg);color:var(--bg);font-size:.8rem;padding:8px 22px;border-radius:999px;
+  box-shadow:0 6px 20px var(--shadow);display:none}
+
+/* ── 手機版 ───────────────────────────────────── */
+@media(max-width:560px){
+  .wrap{padding:0 16px}
+  .nav{gap:12px;height:54px}
+  .nav .brand{font-size:.95rem}
+  .nav .brand img{height:24px}
+  .nav a.item{font-size:.8rem}
+  #themeBtn{width:30px;height:30px}
+  .hero{padding:44px 0 36px;gap:24px}
+  .hero .avatar{width:104px;height:104px}
+  section{padding:40px 0}
+  .lb-inner{padding:70px 16px 90px}
+}
+</style>
+</head>
+<body>
+<div id="bgLayer"></div>
+
+<header>
+  <nav class="nav wrap">
+    <a class="brand" href="#" id="brand"><span>…</span></a>
+    <a class="item" href="#works">作品</a>
+    <a class="item" href="#timeline">時間軸</a>
+    <a class="item" href="#guestbook" id="navGb">留言板</a>
+    <button id="themeBtn" title="切換主題" aria-label="切換主題">◐</button>
+  </nav>
+</header>
+<div id="announce"><span id="announceText"></span><button id="announceClose" aria-label="關閉">✕</button></div>
+
+<main class="wrap">
+
+  <!-- About -->
+  <div class="hero" id="about">
+    <img class="avatar" id="avatar" alt="頭像" src="">
+    <div class="info">
+      <h1 id="name">…</h1>
+      <p class="tagline" id="tagline"></p>
+      <div id="commission"></div>
+      <p class="about" id="aboutText"></p>
+      <div class="links" id="links"></div>
+    </div>
+  </div>
+
+  <!-- Works -->
+  <section id="works">
+    <div class="sec-head"><h2>作品集</h2><span class="en">Works</span></div>
+    <div class="works-tools">
+      <div class="filters" id="filters"></div>
+      <input id="searchBox" type="search" placeholder="搜尋標題/標籤…">
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <p class="empty" id="worksEmpty" style="display:none">這個分類還沒有作品。</p>
+  </section>
+
+  <!-- Timeline -->
+  <section id="timeline">
+    <div class="sec-head"><h2>時間軸</h2><span class="en">Timeline</span></div>
+    <div class="timeline" id="tlList"></div>
+  </section>
+
+  <!-- Guestbook -->
+  <section id="guestbook">
+    <div class="sec-head"><h2>留言板</h2><span class="en">Guestbook</span></div>
+    <form class="gb-form" id="gbForm">
+      <input id="gbName" maxlength="30" placeholder="暱稱" required>
+      <textarea id="gbMsg" maxlength="500" placeholder="留下腳印吧!" required></textarea>
+      <!-- 蜜罐欄位:機器人才會填,真人看不到 -->
+      <input class="hp" id="gbWebsite" tabindex="-1" autocomplete="off" placeholder="請留空">
+      <button type="submit" id="gbSubmit">送出留言</button>
+      <p class="gb-note" id="gbStatus"></p>
+    </form>
+    <div class="gb-list" id="gbList"></div>
+  </section>
+
+</main>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose" aria-label="關閉">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="上一張">←</button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="下一張">→</button>
+  <div class="lb-inner" id="lbInner"></div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span id="footerText"></span>
+    <button id="topBtn">回到頂端 ↑</button>
+  </div>
+</footer>
+
+<div id="previewBar">預覽模式 — 這是編輯器裡尚未匯出的草稿</div>
+
+<script>
+/* ══════════ 工具 ══════════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isHex = s => /^#[0-9a-fA-F]{3,8}$/.test(s || "");
+
+/* ══════════ 字體預設清單(標題/內文可分開選) ══════════ */
+const FONTS = {
+  "noto-sans":  { css:"'Noto Sans TC',system-ui,sans-serif", gf:"Noto+Sans+TC:wght@300;400;500;700" },
+  "noto-serif": { css:"'Noto Serif TC',serif",               gf:"Noto+Serif+TC:wght@500;700;900" },
+  "wenkai":     { css:"'LXGW WenKai TC',cursive",            gf:"LXGW+WenKai+TC:wght@400;700" },
+  "zen-maru":   { css:"'Zen Maru Gothic','Noto Sans TC',sans-serif", gf:"Zen+Maru+Gothic:wght@400;500;700" },
+  "zen-mincho": { css:"'Zen Old Mincho','Noto Serif TC',serif",      gf:"Zen+Old+Mincho:wght@400;700;900" }
+};
+
+/* ══════════ 主題切換 ══════════ */
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  $("#themeBtn").textContent = t === "dark" ? "○" : "●";
+}
+$("#themeBtn").onclick = () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", next); applyTheme(next);
+};
+
+/* ══════════ 載入資料(預覽模式優先讀編輯器草稿) ══════════ */
+let DATA = null, currentFilter = "全部", visibleWorks = [];
+const isPreview = new URLSearchParams(location.search).has("preview");
+
+(async () => {
+  await 0; // 等整份指令碼載入完再開始(預覽模式是同步路徑,不等會踩到還沒宣告的變數)
+  if (isPreview){
+    try{
+      DATA = JSON.parse(localStorage.getItem("artfolio_preview"));
+      if (DATA){ $("#previewBar").style.display = "block"; initTheme(); render(); return; }
+    }catch(e){ console.error("預覽資料載入失敗,改用 data.json:", e); }
+  }
+  fetch("data.json?v=" + Date.now())
+    .then(r => r.json())
+    .then(d => { DATA = d; initTheme(); render(); })
+    .catch(() => { document.body.innerHTML = "<p style='padding:40px;font-family:sans-serif'>data.json 讀取失敗,請檢查格式是否正確(可用 editor.html 重新匯出)。</p>"; });
+})();
+
+function initTheme(){
+  const pref = DATA.settings?.defaultTheme;
+  const saved = localStorage.getItem("theme");
+  applyTheme(saved || (pref === "light" || pref === "dark" ? pref
+    : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")));
+}
+
+/* ══════════ 套用外觀自訂 ══════════ */
+function luminance(hex){
+  let h = hex.replace("#","");
+  if (h.length === 3) h = [...h].map(c => c+c).join("");
+  const [r,g,b] = [0,2,4].map(i => parseInt(h.slice(i,i+2),16)/255);
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+}
+function applyAppearance(a){
+  a = a || {};
+  const de = document.documentElement;
+
+  /* 字體 */
+  const fh = FONTS[a.fontHeading] || FONTS["noto-serif"];
+  const fb = FONTS[a.fontBody] || FONTS["noto-sans"];
+  const need = [...new Set([fh.gf, fb.gf])].filter(g => !g.startsWith("Noto+"));
+  if (need.length){
+    const l = document.createElement("link"); l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?" + need.map(g => "family="+g).join("&") + "&display=swap";
+    document.head.appendChild(l);
+  }
+  de.style.setProperty("--font-display", fh.css);
+  de.style.setProperty("--font-body", fb.css);
+
+  /* 自訂配色(亮/暗兩組,只要挑 背景+文字 兩色,其餘自動衍生) */
+  if (a.useCustomColors){
+    const st = document.createElement("style");
+    const L = a.light || {}, D = a.dark || {};
+    st.textContent =
+      `:root{${isHex(L.bg)?`--bg:${L.bg};`:""}${isHex(L.fg)?`--fg:${L.fg};`:""}}` +
+      `html[data-theme="dark"]{${isHex(D.bg)?`--bg:${D.bg};`:""}${isHex(D.fg)?`--fg:${D.fg};`:""}}`;
+    document.head.appendChild(st);
+  }
+
+  /* 強調色(按鈕、選中分類、時間軸圓點) */
+  if (a.useAccent && isHex(a.accent)){
+    de.style.setProperty("--accent", a.accent);
+    de.style.setProperty("--accent-contrast", luminance(a.accent) > 0.55 ? "#111111" : "#ffffff");
+  }
+
+  /* 圓角/欄數/灰階 */
+  de.style.setProperty("--radius", (a.radius ?? 4) + "px");
+  de.dataset.cols = a.columns == 2 ? "2" : "3";
+  de.dataset.gray = a.grayscale === false ? "off" : "on";
+
+  /* Logo 與 favicon */
+  if (a.logo){
+    $("#brand").innerHTML = `<img src="${esc(a.logo)}" alt="logo"><span>${esc(DATA.settings?.siteTitle || DATA.profile?.name || "")}</span>`;
+  }
+  if (a.favicon){
+    const l = document.createElement("link"); l.rel = "icon"; l.href = a.favicon;
+    document.head.appendChild(l);
+  }
+
+  /* 背景圖:cover=滿版固定 / tile=平鋪材質,用透明度調淡避免搶戲 */
+  const bg = a.background || {};
+  if (bg.image){
+    const layer = $("#bgLayer");
+    layer.style.backgroundImage = `url("${bg.image}")`;
+    layer.style.opacity = Math.min(1, Math.max(0, bg.opacity ?? 0.08));
+    if (bg.mode === "tile"){ layer.style.backgroundRepeat = "repeat"; layer.style.backgroundSize = "auto"; }
+    else { layer.style.backgroundRepeat = "no-repeat"; layer.style.backgroundSize = "cover"; }
+  }
+}
+
+/* ══════════ 渲染 ══════════ */
+function render(){
+  const p = DATA.profile || {}, s = DATA.settings || {};
+  applyAppearance(DATA.appearance);
+
+  document.title = s.siteTitle || p.name || "作品集";
+  if (!DATA.appearance?.logo) $("#brand").innerHTML = `<span>${esc(s.siteTitle || p.name || "")}</span>`;
+  $("#name").textContent = p.name || "";
+  $("#tagline").textContent = p.tagline || "";
+  $("#aboutText").textContent = p.about || "";
+  if (p.avatar) $("#avatar").src = p.avatar; else $("#avatar").style.display = "none";
+  $("#links").innerHTML = (p.links || []).map(l =>
+    `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
+  $("#footerText").textContent = s.footer || "";
+
+  /* 公告欄(關閉後同分頁不再顯示) */
+  const an = s.announcement || {};
+  if (an.enabled && an.text && !sessionStorage.getItem("announce_closed")){
+    $("#announceText").innerHTML = an.url
+      ? `<a href="${esc(an.url)}" target="_blank" rel="noopener">${esc(an.text)} →</a>`
+      : esc(an.text);
+    $("#announce").style.display = "block";
+    $("#announceClose").onclick = () => { $("#announce").style.display = "none"; sessionStorage.setItem("announce_closed","1"); };
+  }
+
+  /* 委託狀態徽章 */
+  const cm = s.commission || {};
+  const COMM = { open:["comm-open","🟢","委託開放中"], full:["comm-full","","委託排滿,暫停接單"], paused:["comm-paused","","委託暫停中"] };
+  if (COMM[cm.status]){
+    const [cls,,defText] = COMM[cm.status];
+    const inner = `<span class="comm-dot"></span>${esc(cm.text || defText)}${cm.url ? " →" : ""}`;
+    $("#commission").innerHTML = cm.url
+      ? `<a class="comm-badge ${cls}" href="${esc(cm.url)}" target="_blank" rel="noopener">${inner}</a>`
+      : `<span class="comm-badge ${cls}">${inner}</span>`;
+  }
+
+  /* 圖片保護:防右鍵/防拖曳(只能防君子,擋不了截圖,但求心安) */
+  if (s.protectImages){
+    document.documentElement.dataset.protect = "on";
+    document.addEventListener("contextmenu", e => { if (e.target.tagName === "IMG") e.preventDefault(); });
+    document.addEventListener("dragstart", e => { if (e.target.tagName === "IMG") e.preventDefault(); });
+  }
+
+  renderFilters(); renderWorks(); renderTimeline();
+
+  if (s.guestbookEnabled === false){
+    $("#guestbook").style.display = "none"; $("#navGb").style.display = "none";
+  } else loadGuestbook();
+}
+
+/* ── 作品分類篩選 ── */
+function renderFilters(){
+  const cats = ["全部", ...(DATA.categories || [])];
+  $("#filters").innerHTML = cats.map(c =>
+    `<button class="chip ${c===currentFilter?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  document.querySelectorAll(".chip").forEach(b =>
+    b.onclick = () => { currentFilter = b.dataset.c; renderFilters(); renderWorks(); });
+}
+
+/* R-18:同一瀏覽分頁內記住「已確認顯示」的作品 */
+const nsfwOK = new Set(JSON.parse(sessionStorage.getItem("nsfw_ok") || "[]"));
+let searchQuery = "";
+
+function renderWorks(){
+  const q = searchQuery.toLowerCase();
+  visibleWorks = (DATA.works || [])
+    .filter(w => currentFilter === "全部" || w.category === currentFilter)
+    .filter(w => !q || [w.title, w.desc, w.category, ...(w.tags||[])].join(" ").toLowerCase().includes(q));
+  $("#gallery").innerHTML = visibleWorks.map((w, i) => {
+    const masked = w.nsfw && !nsfwOK.has(w.id);
+    return `
+    <figure class="work ${masked ? "nsfw" : ""}" data-i="${i}">
+      <img src="${esc(w.image)}" alt="${esc(w.title)}" loading="lazy">
+      ${masked ? `<div class="mask"><span class="r18">R-18</span><span class="hint">敏感內容,點擊顯示</span></div>` : ""}
+      <figcaption class="meta">
+        <div class="t">${esc(w.title)}</div>
+        <div class="c">${esc(w.category)}${w.date ? " · " + esc(w.date) : ""}${w.nsfw ? " · 🔞" : ""}</div>
+      </figcaption>
+    </figure>`;}).join("");
+  $("#worksEmpty").style.display = visibleWorks.length ? "none" : "block";
+  document.querySelectorAll(".work").forEach(el =>
+    el.onclick = () => {
+      const i = +el.dataset.i, w = visibleWorks[i];
+      if (el.classList.contains("nsfw")){
+        nsfwOK.add(w.id);
+        sessionStorage.setItem("nsfw_ok", JSON.stringify([...nsfwOK]));
+        renderWorks();          // 第一次點:揭開遮罩
+      } else openLightbox(i);   // 之後點:開燈箱
+    });
+}
+$("#searchBox").addEventListener("input", e => { searchQuery = e.target.value.trim(); renderWorks(); });
+
+/* ── 燈箱 ── */
+let lbIndex = 0;
+function openLightbox(i){
+  lbIndex = i;
+  const w = visibleWorks[i];
+  $("#lbInner").innerHTML = `
+    <img src="${esc(w.image)}" alt="${esc(w.title)}">
+    <div class="lb-title">${esc(w.title)}</div>
+    <div class="lb-sub">${esc(w.category)}${w.date ? " · " + esc(w.date) : ""}${(w.tags||[]).length ? " · " + w.tags.map(esc).join(" / ") : ""}</div>
+    ${w.desc ? `<p class="lb-desc">${esc(w.desc)}</p>` : ""}
+    ${(w.links||[]).length ? `<div class="lb-links">${w.links.map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}</div>` : ""}`;
+  $("#lightbox").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeLightbox(){ $("#lightbox").classList.remove("open"); document.body.style.overflow = ""; }
+$("#lbClose").onclick = closeLightbox;
+$("#lightbox").onclick = e => { if (e.target === e.currentTarget) closeLightbox(); };
+$("#lbPrev").onclick = e => { e.stopPropagation(); openLightbox((lbIndex - 1 + visibleWorks.length) % visibleWorks.length); };
+$("#lbNext").onclick = e => { e.stopPropagation(); openLightbox((lbIndex + 1) % visibleWorks.length); };
+addEventListener("keydown", e => {
+  if (!$("#lightbox").classList.contains("open")) return;
+  if (e.key === "Escape") closeLightbox();
+  if (e.key === "ArrowLeft") $("#lbPrev").click();
+  if (e.key === "ArrowRight") $("#lbNext").click();
+});
+
+/* ── 時間軸 ── */
+function renderTimeline(){
+  const items = [...(DATA.timeline || [])].sort((a,b) => (b.date||"").localeCompare(a.date||""));
+  $("#tlList").innerHTML = items.map(t => `
+    <div class="tl-item ${esc(t.type||"")}">
+      <div class="tl-date">${esc(t.date)}</div>
+      <div class="tl-title">${t.type === "achievement" ? '<span class="star">★</span> ' : ""}${esc(t.title)}</div>
+      ${t.desc ? `<div class="tl-desc">${esc(t.desc)}</div>` : ""}
+    </div>`).join("");
+}
+
+/* ── 留言板(需部署到 Cloudflare 後才會生效) ── */
+const API = "/api/guestbook";
+async function loadGuestbook(){
+  try{
+    const r = await fetch(API);
+    if (!r.ok) throw 0;
+    const list = await r.json();
+    $("#gbList").innerHTML = list.length ? list.map(c => `
+      <div class="gb-item">
+        <span class="who">${esc(c.name)}</span><span class="when">${esc((c.created_at||"").slice(0,16).replace("T"," "))}</span>
+        <div class="msg">${esc(c.message)}</div>
+      </div>`).join("") : `<p class="gb-note">還沒有留言,當第一個吧!</p>`;
+  }catch{
+    $("#gbStatus").textContent = "留言板尚未啟用(部署到 Cloudflare 並綁定 D1 資料庫後就會自動開通,詳見教學)。";
+    $("#gbSubmit").disabled = true;
+  }
+}
+$("#gbForm").onsubmit = async e => {
+  e.preventDefault();
+  const btn = $("#gbSubmit"); btn.disabled = true;
+  $("#gbStatus").textContent = "送出中…";
+  try{
+    const r = await fetch(API, {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ name: $("#gbName").value.trim(), message: $("#gbMsg").value.trim(), website: $("#gbWebsite").value })
+    });
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.error || "送出失敗");
+    $("#gbMsg").value = ""; $("#gbStatus").textContent = "留言成功!";
+    loadGuestbook();
+  }catch(err){ $("#gbStatus").textContent = "😢 " + err.message; }
+  btn.disabled = false;
+};
+
+$("#topBtn").onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+</script>
+</body>
+</html>

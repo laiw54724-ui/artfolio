@@ -1,0 +1,147 @@
+{
+  "settings": {
+    "siteTitle": "小魚的作品小窩",
+    "defaultTheme": "auto",
+    "footer": "© 2026 小魚 SakanaFish · 圖片請勿轉載或用於 AI 訓練",
+    "guestbookEnabled": true,
+    "protectImages": false,
+    "announcement": {
+      "enabled": true,
+      "text": "🎉 新刊《無名之人》通販中!",
+      "url": "https://example.com/shop"
+    },
+    "commission": {
+      "status": "open",
+      "text": "",
+      "url": "https://example.com/commission"
+    },
+    "watermark": {
+      "enabled": false,
+      "text": "© 小魚 SakanaFish"
+    }
+  },
+  "appearance": {
+    "logo": "",
+    "favicon": "images/avatar.jpg",
+    "fontHeading": "noto-serif",
+    "fontBody": "noto-sans",
+    "useCustomColors": false,
+    "light": { "bg": "#fafafa", "fg": "#111111" },
+    "dark": { "bg": "#0d0d0d", "fg": "#f2f2f2" },
+    "useAccent": false,
+    "accent": "#b3261e",
+    "radius": 4,
+    "columns": 3,
+    "grayscale": true,
+    "background": { "image": "", "mode": "tile", "opacity": 0.08 }
+  },
+  "profile": {
+    "name": "小魚 SakanaFish",
+    "tagline": "自由接案插畫家|奇幻・黑白・水墨風",
+    "avatar": "images/avatar.jpg",
+    "about": "嗨,我是小魚!平常畫奇幻題材的插畫和短篇漫畫,喜歡黑白與水墨的質感。\n\n作品散落在各大平台,所以蓋了這個小窩把它們collect起來。歡迎透過下面的連結找到我,或在留言板留下腳印!\n\n【委託狀態】目前開放排單中,詳見委託頁。",
+    "links": [
+      { "label": "X (Twitter)", "url": "https://x.com/yourname" },
+      { "label": "Pixiv", "url": "https://pixiv.net/users/00000" },
+      { "label": "Plurk", "url": "https://plurk.com/yourname" },
+      { "label": "委託單", "url": "https://example.com/commission" },
+      { "label": "Email", "url": "mailto:hi@example.com" }
+    ]
+  },
+  "categories": ["插畫", "漫畫", "委託作品", "塗鴉"],
+  "works": [
+    {
+      "id": "w1",
+      "title": "圓相",
+      "category": "插畫",
+      "tags": ["水墨", "原創"],
+      "image": "images/work-01.jpg",
+      "date": "2026-05",
+      "desc": "練習水墨筆觸的一張,墨圈的缺口是故意的——留一個出口給自己。",
+      "links": [{ "label": "Pixiv 版本", "url": "https://pixiv.net" }]
+    },
+    {
+      "id": "w2",
+      "title": "山鳴",
+      "category": "插畫",
+      "tags": ["風景", "線條"],
+      "image": "images/work-02.jpg",
+      "date": "2026-03",
+      "desc": "用等高線畫出的山谷,遠看是風景,近看是聲波。",
+      "links": []
+    },
+    {
+      "id": "w3",
+      "title": "無名之人",
+      "category": "漫畫",
+      "tags": ["角色", "短篇"],
+      "image": "images/work-03.jpg",
+      "date": "2026-02",
+      "desc": "短篇《無名之人》的封面草稿。",
+      "links": [{ "label": "完整漫畫", "url": "https://example.com" }]
+    },
+    {
+      "id": "w4",
+      "title": "秩序練習",
+      "category": "塗鴉",
+      "tags": ["幾何"],
+      "image": "images/work-04.jpg",
+      "date": "2025-12",
+      "desc": "睡前的幾何塗鴉,規律讓人安心。",
+      "links": []
+    },
+    {
+      "id": "w5",
+      "title": "雨的重量",
+      "category": "委託作品",
+      "tags": ["氛圍", "黑白"],
+      "image": "images/work-05.jpg",
+      "date": "2025-10",
+      "desc": "小說《雨的重量》委託插圖,感謝委託人授權展示。(這件示範 R-18 遮罩的效果,其實圖是全年齡的啦)",
+      "nsfw": true,
+      "links": []
+    },
+    {
+      "id": "w6",
+      "title": "潮間帶",
+      "category": "插畫",
+      "tags": ["海", "線條"],
+      "image": "images/work-06.jpg",
+      "date": "2025-08",
+      "desc": "反覆的浪,反覆的日子。",
+      "links": []
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2026-06",
+      "title": "個人網站開站!",
+      "desc": "終於把散落各地的作品collect回家了。",
+      "type": "achievement"
+    },
+    {
+      "date": "2026-04",
+      "title": "接受《月刊插畫誌》訪談",
+      "desc": "聊了黑白創作的心路歷程。",
+      "type": "achievement"
+    },
+    {
+      "date": "2026-01",
+      "title": "開始全職接案",
+      "desc": "離職了!正式成為自由插畫家,請多指教。",
+      "type": "milestone"
+    },
+    {
+      "date": "2025-11",
+      "title": "參加 CWT 同人展",
+      "desc": "首次擺攤,新刊《無名之人》完售,謝謝大家!",
+      "type": "event"
+    },
+    {
+      "date": "2025-06",
+      "title": "開始經營創作帳號",
+      "desc": "一切的起點,當時只有 3 個粉絲(其中一個是我媽)。",
+      "type": "milestone"
+    }
+  ]
+}
